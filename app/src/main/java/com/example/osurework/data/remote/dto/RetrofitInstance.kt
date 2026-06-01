@@ -9,8 +9,8 @@ object RetrofitInstance {
     private const val AUTH_URL = "https://osu.ppy.sh/"
 
     // Twoje dane z osu! OAuth - wpisz tutaj
-    const val CLIENT_ID = 58616
-    const val CLIENT_SECRET = "06z5xNApuwjaKWSb7aut7s6PD8t8k1dmFH3ctUWN"
+    const val CLIENT_ID = 
+    const val CLIENT_SECRET = ""
 
     val authService: OsuAuthService by lazy {
         Retrofit.Builder()
