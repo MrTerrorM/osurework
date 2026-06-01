@@ -14,12 +14,13 @@ data class Score(
     val rank: String,
     val pp: Double?,
     val starRating: Double,
+    val adjustedStarRating: Double,
     val cs: Double,
     val ar: Double,
-    val od: Double = 0.0,
+    val od: Double,
     val misses: Int,
-    val count300: Int = 0,
-    val count100: Int = 0,
-    val count50: Int = 0,
+    val count300: Int,
+    val count100: Int,
+    val count50: Int,
     val reworkPp: Double? = null
 )

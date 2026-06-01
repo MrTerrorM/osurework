@@ -2,7 +2,6 @@ package com.example.osurework.data.repository
 
 import com.example.osurework.data.local.AppDatabase
 import com.example.osurework.data.local.entity.BeatmapAttributesEntity
-import com.example.osurework.data.local.entity.BeatmapEntity
 import com.example.osurework.data.remote.RetrofitInstance
 import com.example.osurework.data.remote.dto.BeatmapAttributesData
 import com.example.osurework.data.remote.dto.BeatmapAttributesRequest
@@ -50,14 +49,11 @@ class OsuRepository(private val database: AppDatabase) {
             onProgress(index + 1, total)
 
             val mods = dto.mods
-            val attrs = fetchAttributes(dto.beatmap.id, mods)
-
-            // API nie zwraca OD/AR/liczby obiektów w attributes — liczymy sami
             val clockRate = getClockRate(mods)
             val baseOD = applyODMods(dto.beatmap.accuracy, mods)
             val baseAR = applyARMods(dto.beatmap.ar, mods)
 
-            val enrichedAttrs = attrs?.copy(
+            val attrs = fetchAttributes(dto.beatmap.id, mods)?.copy(
                 overallDifficulty = calculateRateAdjustedOD(baseOD, clockRate),
                 approachRate      = calculateRateAdjustedAR(baseAR, clockRate),
                 hitCircleCount    = dto.beatmap.countCircles,
@@ -75,10 +71,11 @@ class OsuRepository(private val database: AppDatabase) {
                 mods            = mods,
                 accuracy        = dto.accuracy,
                 maxCombo        = dto.maxCombo,
-                beatmapMaxCombo = enrichedAttrs?.maxCombo ?: dto.beatmap.maxCombo,
+                beatmapMaxCombo = attrs?.maxCombo ?: dto.beatmap.maxCombo,
                 rank            = dto.rank,
                 pp              = dto.pp,
                 starRating      = dto.beatmap.difficultyRating,
+                adjustedStarRating = attrs?.starRating ?: dto.beatmap.difficultyRating,
                 cs              = dto.beatmap.cs,
                 ar              = dto.beatmap.ar,
                 od              = dto.beatmap.accuracy,
@@ -89,12 +86,10 @@ class OsuRepository(private val database: AppDatabase) {
                 reworkPp        = null
             )
 
-            val reworkPp = enrichedAttrs?.let { ReworkCalculator.calculate(it, baseScore) }
+            val reworkPp = attrs?.let { ReworkCalculator.calculate(it, baseScore) }
             baseScore.copy(reworkPp = reworkPp)
         }
     }
-
-    // ── Mod helpers ────────────────────────────────────────────────────────────
 
     private fun getClockRate(mods: List<String>): Double = when {
         mods.any { it == "DT" || it == "NC" } -> 1.5
@@ -127,12 +122,7 @@ class OsuRepository(private val database: AppDatabase) {
         else (1950.0 - adjusted) / 150.0
     }
 
-    // ── Attributes cache ───────────────────────────────────────────────────────
-
-    private suspend fun fetchAttributes(
-        beatmapId: Int,
-        mods: List<String>
-    ): BeatmapAttributesData? {
+    private suspend fun fetchAttributes(beatmapId: Int, mods: List<String>): BeatmapAttributesData? {
         val cacheKey = "${beatmapId}_${mods.sorted().joinToString("")}"
 
         database.beatmapAttributesDao().getByKey(cacheKey)?.let { e ->
@@ -158,12 +148,10 @@ class OsuRepository(private val database: AppDatabase) {
         }
 
         return try {
-            val token    = getToken()
             val response = RetrofitInstance.apiService.getBeatmapAttributes(
-                token, beatmapId, BeatmapAttributesRequest(mods = mods)
+                getToken(), beatmapId, BeatmapAttributesRequest(mods = mods)
             )
             val data = response.attributes
-
             database.beatmapAttributesDao().insert(
                 BeatmapAttributesEntity(
                     cacheKey                     = cacheKey,
@@ -187,30 +175,6 @@ class OsuRepository(private val database: AppDatabase) {
                 )
             )
             data
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    suspend fun getBeatmapMaxCombo(beatmapId: Int): Int? {
-        database.beatmapDao().getById(beatmapId)?.let { return it.maxCombo }
-        return try {
-            val token   = getToken()
-            val beatmap = RetrofitInstance.apiService.getBeatmap(token, beatmapId)
-            database.beatmapDao().insert(
-                BeatmapEntity(
-                    id         = beatmap.id,
-                    title      = "",
-                    artist     = "",
-                    version    = beatmap.version,
-                    coverUrl   = null,
-                    maxCombo   = beatmap.maxCombo,
-                    starRating = beatmap.difficultyRating,
-                    cs         = beatmap.cs,
-                    ar         = beatmap.ar
-                )
-            )
-            beatmap.maxCombo
         } catch (e: Exception) {
             null
         }
