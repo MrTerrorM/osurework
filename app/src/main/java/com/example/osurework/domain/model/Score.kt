@@ -7,6 +7,7 @@ data class Score(
     val beatmapArtist: String,
     val beatmapVersion: String,
     val coverUrl: String?,
+    val listCoverUrl: String?,
     val mods: List<String>,
     val accuracy: Double,
     val maxCombo: Int,

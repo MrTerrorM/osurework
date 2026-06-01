@@ -8,7 +8,7 @@ import com.example.osurework.data.local.entity.BeatmapAttributesEntity
 
 @Database(
     entities = [BeatmapAttributesEntity::class],
-    version = 15
+    version = 5
 )
 abstract class AppDatabase : RoomDatabase() {
 

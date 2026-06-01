@@ -3,6 +3,8 @@ package com.example.osurework
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -21,7 +23,34 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val searchViewModel: SearchViewModel = viewModel()
 
-                NavHost(navController = navController, startDestination = "search") {
+                NavHost(
+                    navController = navController,
+                    startDestination = "search",
+                    enterTransition = {
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(280)
+                        )
+                    },
+                    exitTransition = {
+                        slideOutHorizontally(
+                            targetOffsetX = { -it / 3 },
+                            animationSpec = tween(280)
+                        )
+                    },
+                    popEnterTransition = {
+                        slideInHorizontally(
+                            initialOffsetX = { -it / 3 },
+                            animationSpec = tween(280)
+                        )
+                    },
+                    popExitTransition = {
+                        slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(280)
+                        )
+                    }
+                ) {
                     composable("search") {
                         SearchScreen(
                             navController = navController,

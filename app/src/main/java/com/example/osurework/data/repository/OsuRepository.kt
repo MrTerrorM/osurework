@@ -68,6 +68,7 @@ class OsuRepository(private val database: AppDatabase) {
                 beatmapArtist   = dto.beatmapSet.artist,
                 beatmapVersion  = dto.beatmap.version,
                 coverUrl        = dto.beatmapSet.covers.cover,
+                listCoverUrl = dto.beatmapSet.covers.list,
                 mods            = mods,
                 accuracy        = dto.accuracy,
                 maxCombo        = dto.maxCombo,
@@ -128,22 +129,14 @@ class OsuRepository(private val database: AppDatabase) {
         database.beatmapAttributesDao().getByKey(cacheKey)?.let { e ->
             return BeatmapAttributesData(
                 maxCombo                     = e.maxCombo,
+                starRating                   = e.starRating,
                 aimDifficulty                = e.aimDifficulty,
                 aimDifficultSliderCount      = e.aimDifficultSliderCount,
                 speedDifficulty              = e.speedDifficulty,
                 speedNoteCount               = e.speedNoteCount,
                 sliderFactor                 = e.sliderFactor,
                 aimDifficultStrainCount      = e.aimDifficultStrainCount,
-                speedDifficultStrainCount    = e.speedDifficultStrainCount,
-                flashlightDifficulty         = e.flashlightDifficulty,
-                overallDifficulty            = e.overallDifficulty,
-                approachRate                 = e.approachRate,
-                drainRate                    = e.drainRate,
-                hitCircleCount               = e.hitCircleCount,
-                sliderCount                  = e.sliderCount,
-                spinnerCount                 = e.spinnerCount,
-                aimTopWeightedSliderFactor   = e.aimTopWeightedSliderFactor,
-                speedTopWeightedSliderFactor = e.speedTopWeightedSliderFactor
+                speedDifficultStrainCount    = e.speedDifficultStrainCount
             )
         }
 
@@ -156,22 +149,14 @@ class OsuRepository(private val database: AppDatabase) {
                 BeatmapAttributesEntity(
                     cacheKey                     = cacheKey,
                     maxCombo                     = data.maxCombo,
+                    starRating                   = data.starRating,
                     aimDifficulty                = data.aimDifficulty,
                     aimDifficultSliderCount      = data.aimDifficultSliderCount,
                     speedDifficulty              = data.speedDifficulty,
                     speedNoteCount               = data.speedNoteCount,
                     sliderFactor                 = data.sliderFactor,
                     aimDifficultStrainCount      = data.aimDifficultStrainCount,
-                    speedDifficultStrainCount    = data.speedDifficultStrainCount,
-                    flashlightDifficulty         = data.flashlightDifficulty,
-                    overallDifficulty            = data.overallDifficulty,
-                    approachRate                 = data.approachRate,
-                    drainRate                    = data.drainRate,
-                    hitCircleCount               = data.hitCircleCount,
-                    sliderCount                  = data.sliderCount,
-                    spinnerCount                 = data.spinnerCount,
-                    aimTopWeightedSliderFactor   = data.aimTopWeightedSliderFactor,
-                    speedTopWeightedSliderFactor = data.speedTopWeightedSliderFactor
+                    speedDifficultStrainCount    = data.speedDifficultStrainCount
                 )
             )
             data

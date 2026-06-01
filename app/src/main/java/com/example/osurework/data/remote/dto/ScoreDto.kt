@@ -37,7 +37,8 @@ data class BeatmapSetDto(
 )
 
 data class CoversDto(
-    @SerializedName("cover@2x") val cover: String?
+    @SerializedName("cover@2x") val cover: String?,
+    @SerializedName("list@2x") val list: String?
 )
 
 data class ScoreStatisticsDto(

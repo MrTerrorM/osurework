@@ -1,13 +1,20 @@
 package com.example.osurework.ui.detail
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.osurework.domain.model.Score
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,49 +51,148 @@ fun ScoreDetailScreen(score: Score, navController: NavController) {
         (80.0 - hitWindow) / 6.0
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(score.beatmapTitle) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wróć")
-                    }
-                }
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (score.listCoverUrl != null) {
+            AsyncImage(
+                model = score.listCoverUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
         }
-    ) { padding ->
-        Column(
+
+        // Ciemny gradient od góry do dołu
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "${score.beatmapArtist} - ${score.beatmapTitle}",
-                style = MaterialTheme.typography.titleLarge
-            )
-            Text(
-                text = "[${score.beatmapVersion}]",
-                style = MaterialTheme.typography.titleMedium
-            )
+                .background(
+                    Brush.verticalGradient(
+                        colorStops = arrayOf(
+                            0.0f to Color(0xCC1B171C),
+                            0.35f to Color(0xEE1B171C),
+                            1.0f to Color(0xFF1B171C)
+                        )
+                    )
+                )
+        )
 
-            HorizontalDivider()
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            score.beatmapTitle,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Wróć",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    )
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                Text(
+                    text = "${score.beatmapArtist} - ${score.beatmapTitle}",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Text(
+                    text = "[${score.beatmapVersion}]",
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        color = Color(0xCCFFFFFF)
+                    )
+                )
 
-            DetailRow("Mody", score.mods.ifEmpty { listOf("NM") }.joinToString())
-            DetailRow("Accuracy", "${"%.2f".format(score.accuracy * 100)}%")
-            DetailRow("Combo", "${score.maxCombo}x / ${score.beatmapMaxCombo?.let { "${it}x" } ?: "?"}")
-            DetailRow("Misses", score.misses.toString())
-            DetailRow("Star Rating", "${"%.2f".format(score.adjustedStarRating)}★")
-            DetailRow("AR", "${"%.1f".format(displayAR)}")
-            DetailRow("CS", "${"%.1f".format(displayCS)}")
-            DetailRow("OD", "${"%.1f".format(displayOD)}")
+                Spacer(modifier = Modifier.height(20.dp))
 
-            HorizontalDivider()
+                DetailRow("Mody",     score.mods.ifEmpty { listOf("NM") }.joinToString())
+                DetailRow("Accuracy", "${"%.2f".format(score.accuracy * 100)}%")
+                DetailRow("Combo",    "${score.maxCombo}x / ${score.beatmapMaxCombo?.let { "${it}x" } ?: "?"}")
+                DetailRow("Misses",   score.misses.toString())
+                DetailRow("★ Stars",  "${"%.2f".format(score.adjustedStarRating)}")
+                DetailRow("AR",       "${"%.1f".format(displayAR)}")
+                DetailRow("CS",       "${"%.1f".format(displayCS)}")
+                DetailRow("OD",       "${"%.1f".format(displayOD)}")
 
-            DetailRow("Oficjalne pp", "${"%.2f".format(score.pp ?: 0.0)}pp")
-            DetailRow("Rework pp", score.reworkPp?.let { "${"%.2f".format(it)}pp" } ?: "brak danych")
+                Spacer(modifier = Modifier.height(20.dp))
+
+                HorizontalDivider(color = Color(0x44FFFFFF))
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // PP porównanie
+                val official = score.pp ?: 0.0
+                val rework   = score.reworkPp
+                val diff     = rework?.let { it - official }
+                val diffColor = if (diff == null || diff >= 0) Color(0xFF6EE87A) else Color(0xFFFF6B6B)
+                val arrow     = if (diff == null || diff >= 0) "↑" else "↓"
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Column {
+                        Text(
+                            text = "Oficjalne",
+                            style = MaterialTheme.typography.labelMedium.copy(color = Color(0x99FFFFFF))
+                        )
+                        Text(
+                            text = "${"%.2f".format(official)}pp",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+
+                    if (rework != null && diff != null) {
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Rework",
+                                style = MaterialTheme.typography.labelMedium.copy(color = Color(0xCCB57FD4))
+                            )
+                            Text(
+                                text = "$arrow ${"%.2f".format(rework)}pp",
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    color = diffColor,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                            val diffText = if (diff >= 0) "+${"%.2f".format(diff)}" else "${"%.2f".format(diff)}"
+                            Text(
+                                text = diffText,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = diffColor,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -94,10 +200,21 @@ fun ScoreDetailScreen(score: Score, navController: NavController) {
 @Composable
 fun DetailRow(label: String, value: String) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium)
-        Text(text = value, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xAAFFFFFF))
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = Color.White,
+                fontWeight = FontWeight.Medium
+            )
+        )
     }
 }
